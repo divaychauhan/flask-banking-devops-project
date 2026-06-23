@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="section">
+    <h2>Customer Dashboard</h2>
+    <p class="section-subtitle">
+        Welcome, {{ current_user.full_name }}. Your secure banking session is active.
+    </p>
+
+    <div class="grid">
+        <div class="info-card">
+            <h3>Customer Name</h3>
+            <p>{{ current_user.full_name }}</p>
+        </div>
+
+        <div class="info-card">
+            <h3>Email</h3>
+            <p>{{ current_user.email }}</p>
+        </div>
+
+        <div class="info-card">
+            <h3>Role</h3>
+            <p>{{ current_user.role|capitalize }}</p>
+        </div>
+
+        <div class="info-card">
+            <h3>Total Bank Accounts</h3>
+            <p>{{ total_accounts }}</p>
+        </div>
+
+        <div class="info-card">
+            <h3>Total Transactions</h3>
+            <p>{{ total_transactions }}</p>
+        </div>
+
+        <div class="info-card">
+            <h3>Security Status</h3>
+            <p>Authenticated</p>
+        </div>
+    </div>
+
+    <div class="resume-box" style="margin-top: 35px;">
+        <h3>Banking Operations</h3>
+        <p>
+            You are logged in successfully. Now you can access protected banking operations
+            like account creation, deposit, withdrawal, and transaction history.
+        </p>
+
+        <br>
+
+        <a href="{{ url_for('home') }}" class="btn primary">Open Banking Application</a>
+    </div>
+</section>
+
+<section class="section dark">
+    <h2>Recent Transactions</h2>
+
+    <div class="table-wrapper">
+        {% if recent_transactions %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Account Number</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for transaction in recent_transactions %}
+                        <tr>
+                            <td>{{ transaction.id }}</td>
+                            <td>{{ transaction.account.account_number }}</td>
+                            <td>{{ transaction.transaction_type }}</td>
+                            <td>₹{{ transaction.amount }}</td>
+                            <td>{{ transaction.created_at.strftime('%d-%m-%Y %H:%M') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="empty">No transactions found.</p>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

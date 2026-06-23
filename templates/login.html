@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="auth-wrapper">
+    <div class="auth-card">
+        <h1>Customer Login</h1>
+        <p>Login securely to access your banking dashboard.</p>
+
+        <form method="POST" action="{{ url_for('login') }}">
+            <label>Email</label>
+            <input type="email" name="email" placeholder="Enter email address" required>
+
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Enter password" required>
+
+            <button type="submit" class="btn primary full">Login</button>
+        </form>
+
+        <p class="auth-switch">
+            New customer?
+            <a href="{{ url_for('register') }}">Create account</a>
+        </p>
+    </div>
+</section>
+
+{% endblock %}
