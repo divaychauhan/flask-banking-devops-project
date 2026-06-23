@@ -5,7 +5,7 @@
 <section class="section">
     <h2>Customer Dashboard</h2>
     <p class="section-subtitle">
-        Welcome, {{ current_user.full_name }}. Your secure banking session is active.
+        Welcome, {{ current_user.full_name }}. This is your personal banking dashboard.
     </p>
 
     <div class="grid">
@@ -20,17 +20,17 @@
         </div>
 
         <div class="info-card">
-            <h3>Role</h3>
-            <p>{{ current_user.role|capitalize }}</p>
-        </div>
-
-        <div class="info-card">
-            <h3>Total Bank Accounts</h3>
+            <h3>My Total Accounts</h3>
             <p>{{ total_accounts }}</p>
         </div>
 
         <div class="info-card">
-            <h3>Total Transactions</h3>
+            <h3>My Total Balance</h3>
+            <p>₹{{ total_balance }}</p>
+        </div>
+
+        <div class="info-card">
+            <h3>My Transactions</h3>
             <p>{{ total_transactions }}</p>
         </div>
 
@@ -41,20 +41,54 @@
     </div>
 
     <div class="resume-box" style="margin-top: 35px;">
-        <h3>Banking Operations</h3>
+        <h3>My Banking Operations</h3>
         <p>
-            You are logged in successfully. Now you can access protected banking operations
-            like account creation, deposit, withdrawal, and transaction history.
+            You can create your own bank account, deposit money, withdraw money,
+            and view only your personal transaction history.
         </p>
 
         <br>
 
-        <a href="{{ url_for('home') }}" class="btn primary">Open Banking Application</a>
+        <a href="{{ url_for('home') }}" class="btn primary">Open Banking Operations</a>
+    </div>
+</section>
+
+<section class="section">
+    <h2>My Bank Accounts</h2>
+
+    <div class="table-wrapper">
+        {% if user_accounts %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Account ID</th>
+                        <th>Account Holder</th>
+                        <th>Account Number</th>
+                        <th>Balance</th>
+                        <th>Created Date</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for account in user_accounts %}
+                        <tr>
+                            <td>{{ account.id }}</td>
+                            <td>{{ account.account_holder }}</td>
+                            <td>{{ account.account_number }}</td>
+                            <td>₹{{ account.balance }}</td>
+                            <td>{{ account.created_at.strftime('%d-%m-%Y %H:%M') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="empty">You have not created any bank account yet.</p>
+        {% endif %}
     </div>
 </section>
 
 <section class="section dark">
-    <h2>Recent Transactions</h2>
+    <h2>My Recent Transactions</h2>
 
     <div class="table-wrapper">
         {% if recent_transactions %}
@@ -82,7 +116,7 @@
                 </tbody>
             </table>
         {% else %}
-            <p class="empty">No transactions found.</p>
+            <p class="empty">No transactions found for your accounts.</p>
         {% endif %}
     </div>
 </section>

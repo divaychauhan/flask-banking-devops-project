@@ -15,8 +15,8 @@
             <p>Open a new customer bank account with an initial balance.</p>
 
             <form method="POST" action="{{ url_for('create_account') }}">
-                <label>Account Holder Name</label>
-                <input type="text" name="account_holder" placeholder="Enter account holder name" required>
+               <label>Account Holder Name</label>
+               <input type="text" value="{{ current_user.full_name }}" readonly>
 
                 <label>Account Number</label>
                 <input type="text" name="account_number" placeholder="Enter account number" required>
