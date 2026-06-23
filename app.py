@@ -57,10 +57,17 @@ class Account(db.Model):
     __tablename__ = "accounts"
 
     id = db.Column(db.Integer, primary_key=True)
+
+    # Phase 2: account ownership
+    # nullable=True because old accounts may already exist in RDS
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+
     account_holder = db.Column(db.String(100), nullable=False)
     account_number = db.Column(db.String(20), unique=True, nullable=False)
     balance = db.Column(db.Numeric(12, 2), default=0.00)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship("User", backref=db.backref("accounts", lazy=True))
 
 
 class Transaction(db.Model):
@@ -176,35 +183,69 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    total_accounts = Account.query.count()
-    total_transactions = Transaction.query.count()
-    recent_transactions = Transaction.query.order_by(Transaction.id.desc()).limit(5).all()
+    user_accounts = Account.query.filter_by(user_id=current_user.id).all()
+    account_ids = [account.id for account in user_accounts]
+
+    total_accounts = len(user_accounts)
+    total_balance = sum(
+        (account.balance for account in user_accounts),
+        Decimal("0.00")
+    )
+
+    if account_ids:
+        total_transactions = Transaction.query.filter(
+            Transaction.account_id.in_(account_ids)
+        ).count()
+
+        recent_transactions = Transaction.query.filter(
+            Transaction.account_id.in_(account_ids)
+        ).order_by(Transaction.id.desc()).limit(5).all()
+    else:
+        total_transactions = 0
+        recent_transactions = []
 
     return render_template(
         "dashboard.html",
         total_accounts=total_accounts,
+        total_balance=total_balance,
         total_transactions=total_transactions,
-        recent_transactions=recent_transactions
+        recent_transactions=recent_transactions,
+        user_accounts=user_accounts
     )
 
 
 @app.route("/")
 @login_required
 def home():
-    accounts = Account.query.order_by(Account.id.desc()).all()
-    transactions = Transaction.query.order_by(Transaction.id.desc()).limit(10).all()
-    return render_template("index.html", accounts=accounts, transactions=transactions)
+    accounts = Account.query.filter_by(
+        user_id=current_user.id
+    ).order_by(Account.id.desc()).all()
+
+    account_ids = [account.id for account in accounts]
+
+    if account_ids:
+        transactions = Transaction.query.filter(
+            Transaction.account_id.in_(account_ids)
+        ).order_by(Transaction.id.desc()).limit(10).all()
+    else:
+        transactions = []
+
+    return render_template(
+        "index.html",
+        accounts=accounts,
+        transactions=transactions
+    )
 
 
 @app.route("/create-account", methods=["POST"])
 @login_required
 def create_account():
-    account_holder = request.form.get("account_holder")
+    account_holder = current_user.full_name
     account_number = request.form.get("account_number")
     initial_balance = request.form.get("initial_balance", "0")
 
-    if not account_holder or not account_number:
-        flash("Account holder name and account number are required.", "error")
+    if not account_number:
+        flash("Account number is required.", "error")
         return redirect(url_for("home"))
 
     existing_account = Account.query.filter_by(account_number=account_number).first()
@@ -224,6 +265,7 @@ def create_account():
         return redirect(url_for("home"))
 
     new_account = Account(
+        user_id=current_user.id,
         account_holder=account_holder,
         account_number=account_number,
         balance=balance
@@ -242,10 +284,13 @@ def deposit():
     account_number = request.form.get("account_number")
     amount = request.form.get("amount")
 
-    account = Account.query.filter_by(account_number=account_number).first()
+    account = Account.query.filter_by(
+        account_number=account_number,
+        user_id=current_user.id
+    ).first()
 
     if not account:
-        flash("Account not found.", "error")
+        flash("Account not found in your profile.", "error")
         return redirect(url_for("home"))
 
     try:
@@ -279,10 +324,13 @@ def withdraw():
     account_number = request.form.get("account_number")
     amount = request.form.get("amount")
 
-    account = Account.query.filter_by(account_number=account_number).first()
+    account = Account.query.filter_by(
+        account_number=account_number,
+        user_id=current_user.id
+    ).first()
 
     if not account:
-        flash("Account not found.", "error")
+        flash("Account not found in your profile.", "error")
         return redirect(url_for("home"))
 
     try:
